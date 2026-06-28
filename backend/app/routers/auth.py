@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User, RoleEnum
@@ -62,7 +62,8 @@ def verify_otp_endpoint(data: OTPVerifyRequest):
         access_token=create_access_token(int(user_id)),
         refresh_token=create_refresh_token(int(user_id))
     )
-    @router.post("/logout")
+
+@router.post("/logout")
 def logout(authorization: str = Header(...)):
     try:
         scheme, token = authorization.split()
