@@ -35,6 +35,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-takvim}:${POSTGRES_PASSWORD:-takvim123}@postgres:5432/${POSTGRES_DB:-takvimdb}
       REDIS_URL: redis://redis:6379
       SECRET_KEY: ${SECRET_KEY:-changeme_use_strong_secret_32chars}
+    volumes:
+      - ./backend:/app
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,6 +47,9 @@ services:
     build: ./frontend
     ports:
       - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
 

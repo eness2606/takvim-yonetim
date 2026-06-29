@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
 
 export default function Login() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
     const [error, setError] = useState('')
     const navigate = useNavigate()
     const { login } = useAuth()
@@ -35,28 +36,43 @@ export default function Login() {
     }
 
     return (
-        <div style={{ maxWidth: 400, margin: '100px auto' }}>
-            <h2>Giriş Yap</h2>
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    style={{ display: 'block', width: '100%', marginBottom: 10, padding: 8 }}
-                />
-                <input
-                    type="password"
-                    placeholder="Şifre"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    style={{ display: 'block', width: '100%', marginBottom: 10, padding: 8 }}
-                />
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-                <button type="submit" style={{ width: '100%', padding: 8 }}>Giriş</button>
-            </form>
+        <div className="auth-page">
+            <div className="auth-card">
+                <h2>Giriş Yap</h2>
+                <form onSubmit={handleSubmit}>
+                    <div className="field">
+                        <input
+                            type="email"
+                            placeholder="Email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="field password-field">
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="Şifre"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="password-toggle"
+                            onClick={() => setShowPassword(!showPassword)}
+                            tabIndex={-1}
+                        >
+                            {showPassword ? 'Gizle' : 'Göster'}
+                        </button>
+                    </div>
+                    {error && <div className="message message-error">{error}</div>}
+                    <button type="submit">Giriş</button>
+                </form>
+                <p className="auth-footer">
+                    Hesabın yok mu? <Link to="/register">Kayıt ol</Link>
+                </p>
+            </div>
         </div>
     )
 }

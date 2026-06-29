@@ -126,12 +126,12 @@ export default function Dashboard() {
     const goToday = () => setCurrentDate(new Date())
 
     const renderEventChip = (ev) => (
-        <div key={ev.id} style={{ background: '#3b82f6', color: 'white', borderRadius: 4, padding: '2px 6px', marginTop: 4, fontSize: 12 }}>
-            <div>{ev.title}</div>
+        <div key={ev.id} className="event-chip">
+            <div className="event-title">{ev.title}</div>
             {isEditor && (
-                <div style={{ marginTop: 2 }}>
-                    <button onClick={() => openEditForm(ev)} style={{ fontSize: 11, marginRight: 4 }}>Düzenle</button>
-                    <button onClick={() => handleDelete(ev.id)} style={{ fontSize: 11 }}>Sil</button>
+                <div className="event-actions">
+                    <button onClick={() => openEditForm(ev)}>Düzenle</button>
+                    <button onClick={() => handleDelete(ev.id)}>Sil</button>
                 </div>
             )}
         </div>
@@ -141,15 +141,15 @@ export default function Dashboard() {
         const days = getMonthDays(currentDate)
         return (
             <div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', fontWeight: 'bold', marginBottom: 5 }}>
+                <div className="weekday-row">
                     {WEEKDAY_LABELS.map(label => <div key={label}>{label}</div>)}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+                <div className="month-grid">
                     {days.map((day, i) => (
-                        <div key={i} style={{ minHeight: 90, border: '1px solid #444', padding: 4, background: day && isSameDay(day, new Date()) ? '#1e293b' : 'transparent' }}>
+                        <div key={i} className={`day-cell ${!day ? 'empty' : ''} ${day && isSameDay(day, new Date()) ? 'today' : ''}`}>
                             {day && (
                                 <>
-                                    <div style={{ fontSize: 12, opacity: 0.7 }}>{day.getDate()}</div>
+                                    <div className="day-number">{day.getDate()}</div>
                                     {eventsOnDay(events, day).map(renderEventChip)}
                                 </>
                             )}
@@ -163,10 +163,10 @@ export default function Dashboard() {
     const renderWeekView = () => {
         const days = getWeekDays(currentDate)
         return (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+            <div className="week-grid">
                 {days.map((day, i) => (
-                    <div key={i} style={{ minHeight: 200, border: '1px solid #444', padding: 4, background: isSameDay(day, new Date()) ? '#1e293b' : 'transparent' }}>
-                        <div style={{ fontWeight: 'bold', fontSize: 12 }}>{WEEKDAY_LABELS[i]} {day.getDate()}</div>
+                    <div key={i} className={`week-cell ${isSameDay(day, new Date()) ? 'today' : ''}`}>
+                        <div className="week-cell-label">{WEEKDAY_LABELS[i]} {day.getDate()}</div>
                         {eventsOnDay(events, day).map(renderEventChip)}
                     </div>
                 ))}
@@ -177,8 +177,8 @@ export default function Dashboard() {
     const renderDayView = () => {
         const dayEvents = eventsOnDay(events, currentDate)
         return (
-            <div style={{ border: '1px solid #444', padding: 10, minHeight: 200 }}>
-                {dayEvents.length === 0 && <p style={{ opacity: 0.6 }}>Bu gün için etkinlik yok.</p>}
+            <div className="day-view">
+                {dayEvents.length === 0 && <p className="empty-hint">Bu gün için etkinlik yok.</p>}
                 {dayEvents.map(renderEventChip)}
             </div>
         )
@@ -192,27 +192,28 @@ export default function Dashboard() {
     }
 
     return (
-        <div style={{ padding: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="dashboard">
+            <div className="dashboard-header">
                 <h2>Takvim</h2>
                 <div>
-                    <span style={{ marginRight: 10 }}>{user?.email} ({user?.role})</span>
+                    <span className="user-pill">{user?.email} ({user?.role})</span>
                     <button onClick={handleLogout}>Çıkış</button>
                 </div>
             </div>
 
-            <div style={{ margin: '15px 0' }}>
-                <button onClick={() => setView('month')} disabled={view === 'month'}>Aylık</button>
-                <button onClick={() => setView('week')} disabled={view === 'week'} style={{ marginLeft: 5 }}>Haftalık</button>
-                <button onClick={() => setView('day')} disabled={view === 'day'} style={{ marginLeft: 5 }}>Günlük</button>
+            <div className="toolbar">
+                <div className="view-tabs">
+                    <button onClick={() => setView('month')} disabled={view === 'month'}>Aylık</button>
+                    <button onClick={() => setView('week')} disabled={view === 'week'}>Haftalık</button>
+                    <button onClick={() => setView('day')} disabled={view === 'day'}>Günlük</button>
+                </div>
+                <div className="spacer" />
                 {isEditor && (
-                    <button onClick={openCreateForm} style={{ marginLeft: 20 }}>
-                        + Etkinlik Ekle
-                    </button>
+                    <button onClick={openCreateForm}>+ Etkinlik Ekle</button>
                 )}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <div className="nav-bar">
                 <button onClick={goPrev}>←</button>
                 <button onClick={goToday}>Bugün</button>
                 <button onClick={goNext}>→</button>
@@ -224,32 +225,36 @@ export default function Dashboard() {
             {view === 'day' && renderDayView()}
 
             {showForm && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <form onSubmit={handleSubmitForm} style={{ background: '#1e1e1e', padding: 20, borderRadius: 8, width: 320 }}>
+                <div className="modal-overlay">
+                    <form onSubmit={handleSubmitForm} className="modal-card">
                         <h3>{editingEvent ? 'Etkinlik Düzenle' : 'Yeni Etkinlik'}</h3>
-                        <input
-                            type="text" placeholder="Başlık" value={formTitle}
-                            onChange={e => setFormTitle(e.target.value)} required
-                            style={{ display: 'block', width: '100%', marginBottom: 8, padding: 6 }}
-                        />
-                        <textarea
-                            placeholder="Açıklama" value={formDesc}
-                            onChange={e => setFormDesc(e.target.value)}
-                            style={{ display: 'block', width: '100%', marginBottom: 8, padding: 6 }}
-                        />
-                        <label style={{ fontSize: 12 }}>Başlangıç</label>
-                        <input
-                            type="datetime-local" value={formStart}
-                            onChange={e => setFormStart(e.target.value)} required
-                            style={{ display: 'block', width: '100%', marginBottom: 8, padding: 6 }}
-                        />
-                        <label style={{ fontSize: 12 }}>Bitiş</label>
-                        <input
-                            type="datetime-local" value={formEnd}
-                            onChange={e => setFormEnd(e.target.value)} required
-                            style={{ display: 'block', width: '100%', marginBottom: 12, padding: 6 }}
-                        />
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                        <div className="field">
+                            <input
+                                type="text" placeholder="Başlık" value={formTitle}
+                                onChange={e => setFormTitle(e.target.value)} required
+                            />
+                        </div>
+                        <div className="field">
+                            <textarea
+                                placeholder="Açıklama" value={formDesc}
+                                onChange={e => setFormDesc(e.target.value)}
+                            />
+                        </div>
+                        <div className="field">
+                            <label>Başlangıç</label>
+                            <input
+                                type="datetime-local" value={formStart}
+                                onChange={e => setFormStart(e.target.value)} required
+                            />
+                        </div>
+                        <div className="field">
+                            <label>Bitiş</label>
+                            <input
+                                type="datetime-local" value={formEnd}
+                                onChange={e => setFormEnd(e.target.value)} required
+                            />
+                        </div>
+                        <div className="modal-actions">
                             <button type="button" onClick={() => setShowForm(false)}>Vazgeç</button>
                             <button type="submit">Kaydet</button>
                         </div>
