@@ -8,11 +8,13 @@ def seed_db(db: Session):
         return
 
     editor = User(
+        username="editor_user",
         email="editor@test.com",
         hashed_password=hash_password("Editor123"),
         role=RoleEnum.editor
     )
     viewer = User(
+        username="viewer_user",
         email="viewer@test.com",
         hashed_password=hash_password("Viewer123"),
         role=RoleEnum.viewer

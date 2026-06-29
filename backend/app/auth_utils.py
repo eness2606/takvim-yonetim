@@ -43,11 +43,24 @@ def save_otp(user_id: int, otp: str) -> str:
     session_token = str(uuid.uuid4())
     redis_client.setex(f"otp:{session_token}", 120, otp)
     redis_client.setex(f"otp_user:{session_token}", 120, str(user_id))
+    # Bu kullanıcı için en son geçerli oturumu işaretle; yeni istek eskisini geçersiz kılar
+    redis_client.setex(f"otp_active:{user_id}", 120, session_token)
     return session_token
 
-def verify_otp(session_token: str, otp_code: str) -> bool:
+def verify_otp(session_token: str, otp_code: str) -> int | None:
+    user_id = redis_client.get(f"otp_user:{session_token}")
+    if not user_id:
+        return None
+
+    active_session = redis_client.get(f"otp_active:{user_id}")
+    if active_session != session_token:
+        return None  # daha yeni bir OTP istenmiş, bu kod artık geçersiz
+
     stored = redis_client.get(f"otp:{session_token}")
-    if stored and stored == otp_code:
-        redis_client.delete(f"otp:{session_token}")
-        return True
-    return False
+    if stored != otp_code:
+        return None
+
+    redis_client.delete(f"otp:{session_token}")
+    redis_client.delete(f"otp_user:{session_token}")
+    redis_client.delete(f"otp_active:{user_id}")
+    return int(user_id)

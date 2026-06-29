@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import api from '../api'
 
 export default function Register() {
+  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -15,11 +16,16 @@ export default function Register() {
     e.preventDefault()
     setError('')
     try {
-      await api.post('/auth/register', { email, password, role })
+      await api.post('/auth/register', { username, email, password, role })
       setSuccess(true)
       setTimeout(() => navigate('/login'), 1500)
     } catch (err) {
-      setError(err.response?.data?.detail || 'Kayıt başarısız')
+      const detail = err.response?.data?.detail
+      if (Array.isArray(detail)) {
+        setError(detail.map(d => d.msg).join(', '))
+      } else {
+        setError(detail || 'Kayıt başarısız')
+      }
     }
   }
 
@@ -28,6 +34,15 @@ export default function Register() {
       <div className="auth-card">
         <h2>Kayıt Ol</h2>
         <form onSubmit={handleSubmit}>
+          <div className="field">
+            <input
+              type="text"
+              placeholder="Kullanıcı adı"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
           <div className="field">
             <input
               type="email"
@@ -44,7 +59,9 @@ export default function Register() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={6}
+              minLength={8}
+              pattern="^(?=.*[A-Z])(?=.*\d).{8,}$"
+              title="En az 8 karakter, bir büyük harf ve bir rakam içermeli"
             />
             <button
               type="button"
@@ -55,6 +72,7 @@ export default function Register() {
               {showPassword ? 'Gizle' : 'Göster'}
             </button>
           </div>
+          <p className="field-hint">En az 8 karakter, bir büyük harf ve bir rakam içermeli.</p>
           <div className="field">
             <select value={role} onChange={(e) => setRole(e.target.value)}>
               <option value="viewer">Viewer</option>

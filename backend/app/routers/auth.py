@@ -17,7 +17,10 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 def register(data: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == data.email).first():
         raise HTTPException(status_code=400, detail="Bu email zaten kayıtlı")
+    if db.query(User).filter(User.username == data.username).first():
+        raise HTTPException(status_code=400, detail="Bu kullanıcı adı zaten kullanılıyor")
     user = User(
+        username=data.username,
         email=data.email,
         hashed_password=hash_password(data.password),
         role=data.role
@@ -49,18 +52,13 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
 
 @router.post("/verify-otp", response_model=TokenResponse)
 def verify_otp_endpoint(data: OTPVerifyRequest):
-    if not verify_otp(data.session_token, data.otp_code):
+    user_id = verify_otp(data.session_token, data.otp_code)
+    if user_id is None:
         raise HTTPException(status_code=401, detail="OTP hatalı veya süresi doldu")
 
-    user_id = redis_client.get(f"otp_user:{data.session_token}")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Oturum süresi doldu")
-
-    redis_client.delete(f"otp_user:{data.session_token}")
-
     return TokenResponse(
-        access_token=create_access_token(int(user_id)),
-        refresh_token=create_refresh_token(int(user_id))
+        access_token=create_access_token(user_id),
+        refresh_token=create_refresh_token(user_id)
     )
 
 @router.post("/logout")
@@ -69,7 +67,7 @@ def logout(authorization: str = Header(...)):
         scheme, token = authorization.split()
     except ValueError:
         raise HTTPException(status_code=401, detail="Geçersiz token")
-    
+
     redis_client.delete(f"access:{token}")
     return {"message": "Çıkış yapıldı"}
 
