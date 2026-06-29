@@ -54,15 +54,38 @@ export default function Dashboard() {
     const [formStart, setFormStart] = useState('')
     const [formEnd, setFormEnd] = useState('')
 
+    const [searchTitle, setSearchTitle] = useState('')
+    const [searchStart, setSearchStart] = useState('')
+    const [searchEnd, setSearchEnd] = useState('')
+    const [searchResults, setSearchResults] = useState(null)
+    const [searchTotal, setSearchTotal] = useState(0)
+
     const isEditor = user?.role === 'editor'
+    const isSearching = searchResults !== null
 
     useEffect(() => {
         fetchEvents()
     }, [])
 
     const fetchEvents = async () => {
-        const res = await api.get('/events/')
+        const res = await api.get('/events/', { params: { limit: 100 } })
         setEvents(res.data)
+    }
+
+    const handleSearch = async (e) => {
+        e.preventDefault()
+        const params = { limit: 100 }
+        if (searchTitle) params.title = searchTitle
+        if (searchStart) params.start_date = searchStart
+        if (searchEnd) params.end_date = searchEnd
+        const res = await api.get('/events/', { params })
+        setSearchResults(res.data)
+        setSearchTotal(Number(res.headers['x-total-count'] ?? res.data.length))
+    }
+
+    const clearSearch = () => {
+        setSearchTitle(''); setSearchStart(''); setSearchEnd('')
+        setSearchResults(null)
     }
 
     const handleLogout = async () => {
@@ -99,12 +122,14 @@ export default function Dashboard() {
         }
         setShowForm(false)
         fetchEvents()
+        if (isSearching) handleSearch({ preventDefault: () => {} })
     }
 
     const handleDelete = async (id) => {
         if (!confirm('Bu etkinliği silmek istediğine emin misin?')) return
         await api.delete(`/events/${id}`)
         fetchEvents()
+        if (isSearching) handleSearch({ preventDefault: () => {} })
     }
 
     const goPrev = () => {
@@ -184,6 +209,14 @@ export default function Dashboard() {
         )
     }
 
+    const renderSearchResults = () => (
+        <div className="day-view">
+            <p className="empty-hint">{searchTotal} etkinlik bulundu.</p>
+            {searchResults.length === 0 && <p className="empty-hint">Sonuç yok.</p>}
+            {searchResults.map(renderEventChip)}
+        </div>
+    )
+
     const headerLabel = () => {
         if (view === 'month') return currentDate.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })
         if (view === 'day') return currentDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -201,6 +234,27 @@ export default function Dashboard() {
                 </div>
             </div>
 
+            <form className="search-bar" onSubmit={handleSearch}>
+                <input
+                    type="text"
+                    placeholder="Başlığa göre ara..."
+                    value={searchTitle}
+                    onChange={e => setSearchTitle(e.target.value)}
+                />
+                <input
+                    type="date"
+                    value={searchStart}
+                    onChange={e => setSearchStart(e.target.value)}
+                />
+                <input
+                    type="date"
+                    value={searchEnd}
+                    onChange={e => setSearchEnd(e.target.value)}
+                />
+                <button type="submit">Ara</button>
+                {isSearching && <button type="button" onClick={clearSearch}>Temizle</button>}
+            </form>
+
             <div className="toolbar">
                 <div className="view-tabs">
                     <button onClick={() => setView('month')} disabled={view === 'month'}>Aylık</button>
@@ -213,16 +267,19 @@ export default function Dashboard() {
                 )}
             </div>
 
-            <div className="nav-bar">
-                <button onClick={goPrev}>←</button>
-                <button onClick={goToday}>Bugün</button>
-                <button onClick={goNext}>→</button>
-                <strong>{headerLabel()}</strong>
-            </div>
+            {!isSearching && (
+                <div className="nav-bar">
+                    <button onClick={goPrev}>←</button>
+                    <button onClick={goToday}>Bugün</button>
+                    <button onClick={goNext}>→</button>
+                    <strong>{headerLabel()}</strong>
+                </div>
+            )}
 
-            {view === 'month' && renderMonthView()}
-            {view === 'week' && renderWeekView()}
-            {view === 'day' && renderDayView()}
+            {isSearching && renderSearchResults()}
+            {!isSearching && view === 'month' && renderMonthView()}
+            {!isSearching && view === 'week' && renderWeekView()}
+            {!isSearching && view === 'day' && renderDayView()}
 
             {showForm && (
                 <div className="modal-overlay">

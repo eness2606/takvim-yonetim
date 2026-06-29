@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel
 from app.database import get_db
@@ -27,8 +27,26 @@ class EventOut(BaseModel):
         from_attributes = True
 
 @router.get("/", response_model=List[EventOut])
-def list_events(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return db.query(Event).all()
+def list_events(
+    response: Response,
+    skip: int = 0,
+    limit: int = 100,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    title: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    query = db.query(Event)
+    if start_date:
+        query = query.filter(Event.start_time >= start_date)
+    if end_date:
+        query = query.filter(Event.start_time <= end_date)
+    if title:
+        query = query.filter(Event.title.ilike(f"%{title}%"))
+
+    response.headers["X-Total-Count"] = str(query.count())
+    return query.order_by(Event.start_time).offset(skip).limit(limit).all()
 
 @router.post("/", response_model=EventOut, status_code=201)
 def create_event(data: EventCreate, db: Session = Depends(get_db), current_user: User = Depends(require_editor)):
