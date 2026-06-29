@@ -421,3 +421,80 @@ input:focus, textarea:focus, select:focus {
   border-color: var(--accent);
   color: #fff;
 }
+
+/* --- Responsive --- */
+@media (max-width: 640px) {
+  .auth-page {
+    padding: 16px;
+  }
+  .auth-card, .modal-card {
+    width: 100%;
+    max-width: 360px;
+    padding: 24px 20px;
+  }
+
+  .dashboard {
+    padding: 16px;
+  }
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .dashboard-header h2 {
+    font-size: 22px;
+  }
+
+  .search-bar {
+    flex-direction: column;
+  }
+  .search-bar input, .search-bar button {
+    width: 100%;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .toolbar .spacer {
+    display: none;
+  }
+  .view-tabs {
+    display: flex;
+    gap: 6px;
+  }
+  .view-tabs button {
+    flex: 1;
+  }
+
+  .nav-bar {
+    flex-wrap: wrap;
+  }
+
+  .weekday-row, .month-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+  .day-cell {
+    min-height: 56px;
+    padding: 4px;
+    font-size: 11px;
+  }
+  .day-number {
+    font-size: 10px;
+  }
+  .event-chip {
+    font-size: 10px;
+    padding: 3px 5px;
+  }
+  .event-chip .event-actions button {
+    font-size: 9px;
+    padding: 2px 5px;
+  }
+
+  .week-grid {
+    grid-template-columns: 1fr;
+  }
+  .week-cell {
+    min-height: auto;
+  }
+}
