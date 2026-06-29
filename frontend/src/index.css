@@ -232,6 +232,20 @@ input:focus, textarea:focus, select:focus {
   padding: 6px 14px;
 }
 
+.search-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.search-bar input[type="text"] {
+  flex: 1;
+  min-width: 160px;
+}
+.search-bar input[type="date"] {
+  width: auto;
+}
+
 .toolbar {
   display: flex;
   align-items: center;
